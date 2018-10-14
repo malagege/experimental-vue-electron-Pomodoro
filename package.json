@@ -11,8 +11,6 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "electron-toaster": "^2.0.4",
-    "node-notifier": "^5.2.1",
     "vue": "^2.5.17"
   },
   "devDependencies": {
