@@ -56,6 +56,22 @@ function createMainWindow () {
   return window
 }
 
+// https://www.smwenku.com/a/5b82232d2b717737e032a0d9/
+// 點擊圖標(桌面快捷方式)檢查當前活動實例的個數
+const isSecondInstance = app.makeSingleInstance(() => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore(); // 窗口從最小化恢復時觸發
+    }
+    mainWindow.show();
+    // mainWindow.maximize();
+    mainWindow.focus();
+  }
+});
+
+if (isSecondInstance) {
+  app.quit();
+}
 // quit application when all windows are closed
 app.on('window-all-closed', () => {
   // on macOS it is common for applications to stay open until the user explicitly quits
