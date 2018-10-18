@@ -19,6 +19,7 @@ import TimeCountDown from './components/TimeCountDown.vue'
 import TimeDownShow from './components/TimeDownShow.vue'
 import SetTime from './components/SetTime.vue'
 let e_window = require('electron').remote.getCurrentWindow()
+let desktopIdle = require('desktop-idle')
 
 export default {
   name: 'app',
@@ -28,6 +29,8 @@ export default {
       time_id: 0,
       d_time: 1500,
       down_time: 300,
+      check_idle_id:0,
+      idle_time: 0,
       time: 0,
       setTime_show: false,
       time_function: null,
@@ -65,6 +68,7 @@ export default {
       this.setTime_show = true
     },
     starttime(){
+      clearInterval(this.check_idle_id);
       this.time_function = this.starttime;
       if(this.time_id){
         clearInterval(this.time_id)
@@ -79,6 +83,16 @@ export default {
           this.time_id = 0;
           this.time = this.down_time
           this.notifyMe("take break ,go workaround!!!!!!!!!!")
+          this.check_idle_id = setInterval(()=>{
+            if(desktopIdle.getIdleTime() < 120 ){
+              this.notifyMe2( (++this.idle_time) + " times, take break ,go workaround!!!!!!!!!!")
+            }else{
+              this.dtime()
+              clearInterval(this.check_idle_id);
+              this.check_idle_id = 0
+              this.idle_time = 0
+            }
+          },120000)
           return false
         }
         this.time--
@@ -89,6 +103,7 @@ export default {
       alert('test');
     },
     dtime(){
+      clearInterval(this.check_idle_id);
       this.time_function = this.dtime;
       if(this.time_id){
         clearInterval(this.time_id)
@@ -101,42 +116,55 @@ export default {
           this.h = 0
           clearInterval(this.time_id)
           this.time_id = 0;
-        this.time_id = 0
-        this.time = this.d_time
+          this.time_id = 0
+          this.time = this.d_time
           this.notifyMe("GO WORK!!!!!!!!!!!!cheers!!!!")
+          this.check_idle_id = setInterval(()=>{
+            if(desktopIdle.getIdleTime() < 120 ){
+              this.starttime();
+              clearInterval(this.check_idle_id);
+              this.check_idle_id = 0
+              this.idle_time = 0
+            }else{
+              this.notifyMe2( (++this.idle_time) + " times, GO WORK!!!!!!!!!!!!cheers!!!!")
+            }
+          },120000)
           return false
         }
         this.time--
         this.h -= this.delete_time
       },1000);
     },
+    notifyMe2(msg){
+      // 首先讓我們確定瀏覽器支援 Notification
+      if (!("Notification" in window)) {
+        alert("這個瀏覽器不支援 Notification");
+      }
+
+      // 再檢查使用者是否已經授權執行 Notification
+      else if (Notification.permission === "granted") {
+        // 如果已經授權就可以直接新增 Notification 了!
+        var notification = new Notification(msg);
+      }
+
+      // 否則，我們會需要詢問使用者是否開放權限
+      else if (Notification.permission !== 'denied') {
+        Notification.requestPermission(function (permission) {
+          // 如果使用者同意了就來新增一個 Notification 打聲招呼吧
+          if (permission === "granted") {
+            var notification = new Notification(msg);
+          }
+        });
+      }
+
+      // 如果使用者還是不同意授權執行 Notification
+      // 最好還是進行適當的處理以避免繼續打擾使用者
+      e_window.flashFrame(true)
+    },
     notifyMe(msg) {
     this.audio.src = 's.flac'
     this.audio.play();
-  // 首先讓我們確定瀏覽器支援 Notification
-  if (!("Notification" in window)) {
-    alert("這個瀏覽器不支援 Notification");
-  }
-
-  // 再檢查使用者是否已經授權執行 Notification
-  else if (Notification.permission === "granted") {
-    // 如果已經授權就可以直接新增 Notification 了!
-    var notification = new Notification(msg);
-  }
-
-  // 否則，我們會需要詢問使用者是否開放權限
-  else if (Notification.permission !== 'denied') {
-    Notification.requestPermission(function (permission) {
-      // 如果使用者同意了就來新增一個 Notification 打聲招呼吧
-      if (permission === "granted") {
-        var notification = new Notification(msg);
-      }
-    });
-  }
-
-  // 如果使用者還是不同意授權執行 Notification
-  // 最好還是進行適當的處理以避免繼續打擾使用者
-  e_window.flashFrame(true)
+    this.notifyMe2(msg)
 }
   },
   created(){
