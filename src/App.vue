@@ -69,6 +69,7 @@ export default {
     },
     starttime(){
       clearInterval(this.check_idle_id);
+      this.idle_time = 0
       this.time_function = this.starttime;
       if(this.time_id){
         clearInterval(this.time_id)
@@ -104,6 +105,7 @@ export default {
     },
     dtime(){
       clearInterval(this.check_idle_id);
+      this.idle_time = 0
       this.time_function = this.dtime;
       if(this.time_id){
         clearInterval(this.time_id)
